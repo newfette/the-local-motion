@@ -1,5 +1,6 @@
-/*! The Local Motion Library v1.0.0 (5 Oct 2026). Story-section scenes chosen by the CMS Visual Scene option.
-   Source: The-Local-Design-Test/jobs/impl-01-nitsuh-v6.2/motion-lib. No keys, no tracking, no network calls. */
+/*! The Local Motion Library v1.0.1 (6 Oct 2026). Story-section scenes chosen by the CMS Visual Scene option.
+   v1.0.1: closing heading scroll spotlight (adapted from Local Business People "Things Worth Knowing"); stacked-heading slam on one word only; Photo series paragraph spacing + brown italics.
+   No keys, no tracking, no network calls. */
 /*! The Local Motion Library — core (v0.1). Scenes are chosen per Story Section by the CMS Visual Scene option, rendered
    as text in [data-tl-scene-flag] inside each Story Sections item. Works with any Motion Theme; the shared Rock/Editorial
    engine skips sections that carry a library scene (one-line guard in the template head). No names, slugs, IDs or
@@ -703,6 +704,9 @@
     /* Accent word written _like this_ in a plain heading: its own line, serif italic gold, set right (v6.2 "warm,"). */
     AS + ' .story-template_feature-title:has(.tl-accent-inline),' + AS + ' .tl-feature-title-xl:has(.tl-accent-inline),' + AS + ' .story-template_statement:has(.tl-accent-inline){font-size:min(12.4vw,196px)!important;line-height:.86;text-transform:uppercase;color:var(--tl-cream)}',
     AS + ' .tl-word:has(>.tl-accent-inline){display:block!important;text-align:right}',
+    AS + ' .tl-spot-line{display:block;transform-origin:left center}',
+    AS + ' .tl-spot-line.is-accent{transform-origin:right center}',
+    '@media (prefers-reduced-motion: reduce){' + AS + ' .tl-spot-line{scale:1!important;opacity:1!important}}',
     AS + ' .story-template_eyebrow .tl-accent-inline,' + AS + ' .story-template_rail-label .tl-accent-inline{display:inline-block;transform-origin:50% 100%;color:var(--tl-gold);font-size:1.35em;font-family:inherit;font-style:normal;font-weight:700;text-transform:uppercase;text-align:left;margin:0;line-height:1}',
     AS + ' .tl-accent-inline{display:block;font-family:' + SERIF + ';font-style:italic;font-weight:500;text-transform:none;color:var(--tl-gold);font-size:1.18em;line-height:.84;text-align:right;margin:-.04em 0 -.02em}',
     AS + ' .story-template_gallery-intro{font-family:' + DISPLAY + ';text-transform:uppercase;color:var(--tl-cream);font-size:min(14.2vw,224px);line-height:.86}',
@@ -790,25 +794,56 @@
     var g = window.gsap; if (!g || !window.ScrollTrigger) return;
     var words = [].slice.call(h.querySelectorAll('.tl-word')); if (!words.length) words = M.split(h, 'words', 'tl-word');
     if (!words.length) return;
-    g.killTweensOf(words); g.set(words, { clearProps: 'transform', opacity: 0 });
+    /* 6 Oct (Désirée): softer. The heading rises in gently, word by word; only the accent word (written _like this_)
+       gets the boom — it appears large at the centre of the screen and lands in place. No accent word → soft only. */
+    var accent = words.filter(function (w) { return w.querySelector('.tl-accent-inline') || w.classList.contains('tl-accent-inline'); });
+    var soft = words.filter(function (w) { return accent.indexOf(w) < 0; });
+    g.killTweensOf(words); g.set(words, { clearProps: 'transform' });
+    g.set(soft, { opacity: 0, y: '0.22em' }); g.set(accent, { opacity: 0 });
     ScrollTrigger.create({ trigger: h, start: 'top 80%', once: true, onEnter: function () {
+      g.to(soft, { opacity: 1, y: 0, duration: 1.1, ease: 'power2.out', stagger: 0.12 });
       var ov = document.getElementById('tl-boom');
       if (!ov) { ov = document.createElement('div'); ov.id = 'tl-boom'; ov.style.cssText = 'position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:99999'; document.body.appendChild(ov); }
-      var vw = innerWidth, vh = innerHeight, BEAT = 0.45; /* Karen's is 0.75; Désirée asked for a little faster (5 Oct) */
-      words.forEach(function (w, idx) {
+      var vw = innerWidth, vh = innerHeight;
+      accent.forEach(function (w, idx) {
         var src = (w.children.length === 1 && w.textContent.trim() === w.children[0].textContent.trim()) ? w.children[0] : w;
         var r = src.getBoundingClientRect(), cs = getComputedStyle(src), c = document.createElement('span');
         c.textContent = src.textContent;
         c.style.cssText = 'position:absolute;margin:0;padding:0;white-space:nowrap;left:' + r.left + 'px;top:' + r.top + 'px;font-family:' + cs.fontFamily + ';font-weight:' + cs.fontWeight + ';font-style:' + cs.fontStyle + ';font-size:' + cs.fontSize + ';line-height:' + cs.lineHeight + ';letter-spacing:' + cs.letterSpacing + ';text-transform:' + cs.textTransform + ';color:' + cs.color + ';';
         ov.appendChild(c);
         var dx = vw / 2 - (r.left + r.width / 2), dy = vh / 2 - (r.top + r.height / 2);
-        var sc = Math.max(2, Math.min(Math.min(vw * 0.82 / Math.max(r.width, 1), vh * 0.5 / Math.max(r.height, 1)), 16));
+        var sc = Math.max(1.6, Math.min(Math.min(vw * 0.7 / Math.max(r.width, 1), vh * 0.45 / Math.max(r.height, 1)), 6));
         g.set(c, { transformOrigin: '50% 50%', x: dx, y: dy, scale: sc, opacity: 0 });
-        var tl = g.timeline({ delay: idx * BEAT });
-        tl.to(c, { opacity: 1, duration: 0.12, ease: 'power2.out' }); tl.to(c, { duration: 0.1 });
-        tl.to(c, { x: 0, y: 0, scale: 1, duration: 0.45, ease: 'back.out(1.7)', onComplete: function () { g.set(w, { opacity: 1 }); if (c.parentNode) c.parentNode.removeChild(c); } });
+        var tl = g.timeline({ delay: 0.5 + soft.length * 0.12 + idx * 0.6 });
+        tl.to(c, { opacity: 1, duration: 0.35, ease: 'power2.out' }); tl.to(c, { duration: 0.25 });
+        tl.to(c, { x: 0, y: 0, scale: 1, duration: 0.9, ease: 'power3.out', onComplete: function () { g.set(w, { opacity: 1 }); if (c.parentNode) c.parentNode.removeChild(c); } });
       });
     } });
+  }
+  /* Scroll spotlight (adapted from The Local's Local Business People "Things Worth Knowing" scale-up, same numbers):
+     each heading line sits small and quiet (scale .42, opacity .30) and grows to full size and strength as it crosses
+     the reading line (68% of the screen); scrolling back up returns it. Follows the scroll, never a one-off. Lines are
+     the text before the accent word, the accent word (written _like this_), and the text after it. 6 Oct (Désirée). */
+  function spotlight(h) {
+    var g = window.gsap;
+    var words = [].slice.call(h.querySelectorAll('.tl-word'));
+    if (g && words.length) { g.killTweensOf(words); g.set(words, { clearProps: 'transform,opacity' }); }
+    var acc = h.querySelector('.tl-accent-inline'); if (!acc) return;
+    var accHost = acc; while (accHost.parentNode && accHost.parentNode !== h) accHost = accHost.parentNode;
+    var kids = [].slice.call(h.childNodes), i = kids.indexOf(accHost);
+    var mk = function (cls) { var s = document.createElement('span'); s.className = 'tl-spot-line ' + cls; return s; };
+    var a = mk('is-before'), b = mk('is-accent'), c = mk('is-after');
+    kids.slice(0, i).forEach(function (n) { a.appendChild(n); }); b.appendChild(accHost); kids.slice(i + 1).forEach(function (n) { c.appendChild(n); });
+    [a, b, c].forEach(function (s) { if (s.textContent.trim()) h.appendChild(s); });
+    var rows = [].slice.call(h.querySelectorAll('.tl-spot-line'));
+    var SMALL = 0.42, DIM = 0.30, ease = function (t) { return 1 - Math.pow(1 - t, 2.2); };
+    M.steps.push(function (vh) {
+      var focus = vh * 0.68, band = vh * 0.34, atEnd = (scrollY + vh) >= (document.documentElement.scrollHeight - 160);
+      rows.forEach(function (row) { var r = row.getBoundingClientRect(), t = (focus - (r.top + r.height / 2)) / band;
+        if (atEnd) t = 1; t = M.cl(t, 0, 1); var e = ease(t);
+        row.style.scale = (SMALL + (1 - SMALL) * e).toFixed(4); row.style.opacity = (DIM + (1 - DIM) * e).toFixed(3); });
+    });
+    M.req();
   }
   /* Bump (v6.2 "if you bump into him"): an accent word in the kicker drops in large, squashes and settles. */
   function bump(el) {
@@ -821,7 +856,7 @@
     var kick = [].slice.call(item.querySelectorAll('.story-template_eyebrow .tl-accent-inline,.story-template_rail-label .tl-accent-inline'));
     if (!rm) kick.forEach(function (el) { M.zone(el, bump, 0.84, 0.1); el.addEventListener('mouseenter', function () { bump(el); }); });
     var h = item.querySelector('.story-template_feature-title,.tl-feature-title-xl,.story-template_statement');
-    if (h && !rm) M.safe(function () { wordBoom(h); });
+    if (h && !rm) M.safe(function () { spotlight(h); });
   });
 })();
 
@@ -953,8 +988,9 @@
     if (M.rm) return;
     var longest = words.reduce(function (a, w) { return w.textContent.length > a.textContent.length ? w : a; }, words[0]);
     var slam = function () { var vw = document.documentElement.clientWidth;
-      words.forEach(function (sp, k) { sp.getAnimations().forEach(function (a) { a.cancel(); });
-        var big = sp === longest, want = big ? 3.2 : [1.8, 2.1, 1.9][k % 3], r = sp.getBoundingClientRect();
+      /* 6 Oct (Désirée): only the hardest-hitting word slams; the rest of the heading stays still. */
+      [longest].forEach(function (sp, k) { sp.getAnimations().forEach(function (a) { a.cancel(); });
+        var big = true, want = 3.2, r = sp.getBoundingClientRect();
         var sc = Math.max(1.05, Math.min(want, (vw - 8 - r.left) / Math.max(1, r.width)));
         sp.animate([{ transform: 'translate3d(0,-.12em,0) scale(' + sc + ')' + (big ? ' rotate(-3deg)' : ''), color: big ? '#A65018' : 'inherit' }, { transform: 'scale(.9)', offset: .4 }, { transform: 'scale(1.05)', offset: .6 }, { transform: 'scale(.985)', offset: .8 }, { transform: 'none' }],
           { duration: big ? 820 : 600, delay: k * 190, easing: 'cubic-bezier(.55,0,.25,1)', fill: 'backwards' }); }); };
@@ -1007,6 +1043,10 @@
     P + ' .story-template_feature-split,' + P + ' .story-template_feature-split *{border:0!important}',
     P + ' .story-template_feature-split .story-template_body{max-width:620px;font-size:clamp(17px,1.32vw,19px);line-height:1.62}',
     P + ' .tl-sr-only{' + SR + '}',
+    /* 6 Oct (Désirée): each paragraph reads as its own paragraph; italic words in this text are set in brown. */
+    P + ' .story-template_feature-split .story-template_body p{margin:0 0 1.1em}',
+    P + ' .story-template_feature-split .story-template_body p:last-child{margin-bottom:0}',
+    P + ' .story-template_feature-split .story-template_body em{font-style:italic;color:#7A3A12}',
     P + ' .story-template_gallery-grid{display:flex!important;flex-wrap:wrap;gap:clamp(20px,2.4vw,36px);align-items:flex-end;max-width:1440px;margin:0 auto;padding:0 clamp(20px,5.6vw,80px)}',
     P + ' .story-template_gallery-card{flex:1 1 300px;min-width:0;margin:0;background:none;box-shadow:none;transform:none}',
     P + ' .story-template_gallery-card.is-lead{flex:1 1 100%!important}',
