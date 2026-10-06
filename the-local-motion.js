@@ -1,5 +1,5 @@
-/*! The Local Motion Library v1.0.1 (6 Oct 2026). Story-section scenes chosen by the CMS Visual Scene option.
-   v1.0.1: closing heading scroll spotlight (adapted from Local Business People "Things Worth Knowing"); stacked-heading slam on one word only; Photo series paragraph spacing + brown italics.
+/*! The Local Motion Library v1.0.2 (6 Oct 2026). Story-section scenes chosen by the CMS Visual Scene option.
+   v1.0.2: Paper band hides the template rail kicker on phones too (no duplicate kicker).
    No keys, no tracking, no network calls. */
 /*! The Local Motion Library — core (v0.1). Scenes are chosen per Story Section by the CMS Visual Scene option, rendered
    as text in [data-tl-scene-flag] inside each Story Sections item. Works with any Motion Theme; the shared Rock/Editorial
@@ -937,7 +937,7 @@
     '[data-tl-scene="paper-band"] .tl-last-word{display:block;color:var(--tl-warm);font-family:' + SERIF + ';font-style:italic;text-transform:none;font-size:1.06em;line-height:.9}',
     '[data-tl-scene="paper-band"] .story-template_body,[data-tl-scene="paper-band"] .story-template_body p{font-family:' + TXT + ';font-size:clamp(17px,1.32vw,19px);line-height:1.62;color:var(--tl-navy)}',
     '[data-tl-scene="paper-band"] .story-template_inline-image{max-height:min(90vh,880px)!important;width:auto!important;max-width:100%}',
-    '[data-tl-scene="paper-band"] .story-template_rail{display:none}',
+    '[data-tl-scene="paper-band"] .story-template_rail{display:none!important}',
     '[data-tl-scene="paper-band"] .story-template_grid{display:block}',
     '[data-tl-scene="paper-band"] .story-template_main{max-width:none!important;width:100%!important}',
     '[data-tl-scene="paper-band"] .tl-kicker-line{display:flex;gap:12px;align-items:baseline;margin:0 0 clamp(18px,2vw,28px);font-family:' + TXT + ';font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--tl-navy)}',
